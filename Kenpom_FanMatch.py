@@ -25,6 +25,7 @@ SUPABASE_KEY = os.environ.get("SUPABASE_SERVICE_KEY")
 
 browser = login(USERNAME, PASSWORD)
 supabase: Client = create_client(SUPABASE_URL, SUPABASE_KEY)
+
 # --- 2. HELPER FUNCTIONS ---
 def build_team_lookup(supabase):
     lookup = {}

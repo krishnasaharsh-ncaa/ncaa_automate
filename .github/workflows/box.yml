@@ -1,9 +1,9 @@
-name: KenPom Daily Scraper
+name: KenPom Box Daily Scraper
 
 on:
   schedule:
-    # Runs at 09:00 UTC (4 AM ET) every day to ensure yesterday's stats are finalized
-    - cron: '0 9 * * *'
+    # Runs at 09:10 UTC (4:10 AM ET) every day to ensure yesterday's stats are finalized
+    - cron: '10 9 * * *'
   workflow_dispatch: # Allows you to run it manually for testing
 
 jobs:
@@ -23,10 +23,10 @@ jobs:
         run: |
           pip install -r requirements.txt
 
-      - name: Run Kenpom FanMatch Scraper
+      - name: Run KP Box Score Scraper
         env:
           KENPOM_USER: ${{ secrets.KENPOM_USER }}
           KENPOM_PW: ${{ secrets.KENPOM_PW }}
           SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
           SUPABASE_SERVICE_KEY: ${{ secrets.SUPABASE_SERVICE_KEY }}
-        run: python Kenpom_FanMatch.py
+        run: python box.py
