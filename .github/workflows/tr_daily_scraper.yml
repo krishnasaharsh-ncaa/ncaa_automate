@@ -1,4 +1,4 @@
-name: TeamRankings Daily Scraper
+name: TeamRankings and KenPom Daily Scraper
 
 on:
   schedule:
