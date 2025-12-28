@@ -8,9 +8,14 @@ from supabase.client import create_client, Client
 import os
 from tqdm import tqdm
 
-load_dotenv()
-supabase: Client = create_client(os.environ.get("SUPABASE_URL"), os.environ.get("SUPABASE_SERVICE_KEY"))
+# Use os.environ.get directly; GitHub Actions will provide these
+SUPABASE_URL = os.environ.get("SUPABASE_URL")
+SUPABASE_KEY = os.environ.get("SUPABASE_SERVICE_KEY")
 
+if not SUPABASE_URL or not SUPABASE_KEY:
+    raise ValueError("Supabase credentials not found in environment variables")
+
+supabase: Client = create_client(SUPABASE_URL, SUPABASE_KEY)
 #%%
 # Scrape class
 class TRScraper:
@@ -31,6 +36,7 @@ class TRScraper:
 
 
     def scrape_by_date(self, stat, date):
+        print("Scraping data for the date:", start_date)
         url = f"https://www.teamrankings.com/ncaa-basketball/stat/{stat}?date={date}"
 
         try:
