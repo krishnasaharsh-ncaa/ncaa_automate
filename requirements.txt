@@ -1,0 +1,9 @@
+pandas
+supabase
+tqdm
+python-dotenv
+lxml
+html5lib
+beautifulsoup4
+cloudscraper
+kenpompy
