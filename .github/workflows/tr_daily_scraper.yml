@@ -23,13 +23,6 @@ jobs:
         run: |
           pip install -r requirements.txt
 
-      - name: Run Scraper
-        env:
-          # These link your GitHub Secrets to the Python script
-          SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
-          SUPABASE_SERVICE_KEY: ${{ secrets.SUPABASE_SERVICE_KEY }}
-        run: python TR_Upload.py
-
       - name: Run TeamRankings Scraper
         env:
           SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
