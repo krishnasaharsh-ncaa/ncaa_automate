@@ -29,3 +29,17 @@ jobs:
           SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
           SUPABASE_SERVICE_KEY: ${{ secrets.SUPABASE_SERVICE_KEY }}
         run: python TR_Upload.py
+
+      - name: Run TeamRankings Scraper
+        env:
+          SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+          SUPABASE_SERVICE_KEY: ${{ secrets.SUPABASE_SERVICE_KEY }}
+        run: python TR_Upload.py
+
+      - name: Run Kenpom FanMatch Scraper
+        env:
+          KENPOM_USER: ${{ secrets.KENPOM_USER }}
+          KENPOM_PW: ${{ secrets.KENPOM_PW }}
+          SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+          SUPABASE_SERVICE_KEY: ${{ secrets.SUPABASE_SERVICE_KEY }}
+        run: python Kenpom_FanMatch.py

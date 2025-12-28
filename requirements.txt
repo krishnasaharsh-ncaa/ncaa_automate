@@ -7,3 +7,5 @@ html5lib
 beautifulsoup4
 cloudscraper
 kenpompy
+kenpompy
+cloudscraper
