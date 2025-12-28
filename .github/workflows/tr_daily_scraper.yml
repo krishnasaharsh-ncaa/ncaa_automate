@@ -1,0 +1,32 @@
+name: TeamRankings Daily Scraper
+
+on:
+  schedule:
+    # Runs at 09:00 UTC (4 AM ET) every day to ensure yesterday's stats are finalized
+    - cron: '0 9 * * *'
+  workflow_dispatch: # Allows you to run it manually for testing
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.10'
+          cache: 'pip' # Speeds up future runs by caching libraries
+
+      - name: Install Dependencies
+        run: |
+          pip install pandas supabase tqdm python-dotenv lxml html5lib beautifulsoup4
+
+      - name: Run Scraper
+        env:
+          # These link your GitHub Secrets to the Python script
+          SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+          SUPABASE_SERVICE_KEY: ${{ secrets.SUPABASE_SERVICE_KEY }}
+        run: python your_script_name.py
