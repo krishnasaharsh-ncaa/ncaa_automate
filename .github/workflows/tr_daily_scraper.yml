@@ -22,10 +22,10 @@ jobs:
       - name: Install Dependencies
         run: |
           pip install -r requirements.txt
-          
+
       - name: Run Scraper
         env:
           # These link your GitHub Secrets to the Python script
           SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
           SUPABASE_SERVICE_KEY: ${{ secrets.SUPABASE_SERVICE_KEY }}
-        run: python your_script_name.py
+        run: python TR_Upload.py
