@@ -9,6 +9,7 @@ import time
 from io import StringIO
 from supabase.client import create_client, Client
 from datetime import timedelta, datetime, date
+import random
 
 #%%
 #Authenticate Kenpom
@@ -170,37 +171,44 @@ class BoxScore:
                 if not team1_id or not team2_id:
                     continue
 
-                time.sleep(3)
-                parsed_rows, ot_count = self.parse_box_score(box_url)
-                if not parsed_rows:
+                jitter = random.uniform(6, 15)
+                time.sleep(jitter)
+                try:
+                    parsed_rows, ot_count = self.parse_box_score(box_url)
+                    if not parsed_rows:
+                        continue
+
+                    game_row = {
+                        "game_date": game_date,
+                        "team1_id": team1_id,
+                        "team2_id": team2_id,
+                        "H1_T1 Score": None,
+                        "H2_T1 Score": None,
+                        "OT_T1 Score": None,
+                        "H1_T2 Score": None,
+                        "H2_T2 Score": None,
+                        "OT_T2 Score": None,
+                        "OT Count": ot_count,
+                    }
+
+                    for r in parsed_rows:
+                        tid = team_lookup.get(r["team_name"])
+                        if tid == team1_id:
+                            game_row["H1_T1 Score"] = r["H1"]
+                            game_row["H2_T1 Score"] = r["H2"]
+                            game_row["OT_T1 Score"] = r["OT"]
+                        elif tid == team2_id:
+                            game_row["H1_T2 Score"] = r["H1"]
+                            game_row["H2_T2 Score"] = r["H2"]
+                            game_row["OT_T2 Score"] = r["OT"]
+
+                    self.boxscore_rows.append(game_row)
+                
+                except Exception as e:
+                    print(f"⚠️ Failed to parse {box_url}: {e}")
+                    # Wait a bit longer if we hit an error to "cool down"
+                    time.sleep(20)
                     continue
-
-                game_row = {
-                    "game_date": game_date,
-                    "team1_id": team1_id,
-                    "team2_id": team2_id,
-                    "H1_T1 Score": None,
-                    "H2_T1 Score": None,
-                    "OT_T1 Score": None,
-                    "H1_T2 Score": None,
-                    "H2_T2 Score": None,
-                    "OT_T2 Score": None,
-                    "OT Count": ot_count,
-                }
-
-                for r in parsed_rows:
-                    tid = team_lookup.get(r["team_name"])
-                    if tid == team1_id:
-                        game_row["H1_T1 Score"] = r["H1"]
-                        game_row["H2_T1 Score"] = r["H2"]
-                        game_row["OT_T1 Score"] = r["OT"]
-                    elif tid == team2_id:
-                        game_row["H1_T2 Score"] = r["H1"]
-                        game_row["H2_T2 Score"] = r["H2"]
-                        game_row["OT_T2 Score"] = r["OT"]
-
-                self.boxscore_rows.append(game_row)
-
             print(f"Collected {len(self.boxscore_rows)} games so far")
 
         print(f"\n✅ Total collected box score rows: {len(self.boxscore_rows)}")
