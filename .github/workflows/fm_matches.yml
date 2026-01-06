@@ -1,0 +1,32 @@
+name: KenPom Today's Matches Scraper
+
+on:
+  schedule:
+    # Runs at 10:00 UTC (5 AM ET) every day to ensure yesterday's stats are finalized
+    - cron: '0 10 * * *'
+  workflow_dispatch: # Allows you to run it manually for testing
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.10'
+
+      - name: Install Dependencies
+        run: |
+          pip install -r requirements.txt
+
+      - name: Run Kenpom FanMatch Scraper
+        env:
+          KENPOM_USER: ${{ secrets.KENPOM_USER }}
+          KENPOM_PW: ${{ secrets.KENPOM_PW }}
+          SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+          SUPABASE_SERVICE_KEY: ${{ secrets.SUPABASE_SERVICE_KEY }}
+        run: python kpfm_daily.py
