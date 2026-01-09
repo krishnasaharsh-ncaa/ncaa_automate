@@ -9,7 +9,7 @@ import os
 import re
 import time
 import pandas as pd
-import kenpompy.FanMatch as kf
+import FanMatch as kf
 from datetime import datetime, timedelta, date
 from kenpompy.utils import login
 from supabase.client import create_client, Client
@@ -79,18 +79,28 @@ def insert_fanmatch_to_supabase(date_str, browser):
         winner_id = team_lookup.get(winner_name)
         loser_id  = team_lookup.get(loser_name)
 
+        # Clean ranks
+        if row['Winner'] == row['Team1']:
+            winner_rank = clean_rank(row["Team1Rank"])
+            loser_rank  = clean_rank(row["Team2Rank"])
+        else:
+            winner_rank = clean_rank(row["Team2Rank"])
+            loser_rank  = clean_rank(row["Team1Rank"])
+
+
         if not winner_id or not loser_id:
             continue
 
         # Logic for OT and Score
-        ot_val = str(row["OT"]).lower()
-        is_ot = False if ot_val == 'nan' else True
-        ot_count = 1 if is_ot else 0
-        if is_ot and len(ot_val) > 2:
-            try: ot_count = int(ot_val[0])
-            except: ot_count = 1
+        if row["OT"] == 'nan':
+            ot = False 
+        else:
+            ot = True
+            ot_count = 1
 
-        arena_name = parse_location(row["Location"])
+        # Location parsing
+        arena_name = row["Arena"]
+        city = row['City']
         arena_data = lookup_arena_id(supabase, arena_name)
         
         arena_id, home_team, is_neutral = None, None, True
@@ -103,9 +113,9 @@ def insert_fanmatch_to_supabase(date_str, browser):
         game_row = {
             "game_date": date_str,
             "team1_id": winner_id,
-            "team1_rank": clean_rank(row["WinnerRank"]),
+            "team1_rank": winner_rank,
             "team2_id": loser_id,
-            "team2_rank": clean_rank(row["LoserRank"]),
+            "team2_rank": loser_rank,
             "winner_id": winner_id,
             "winner_score": int(row["WinnerScore"]),
             "loser_id": loser_id,
@@ -116,12 +126,12 @@ def insert_fanmatch_to_supabase(date_str, browser):
             "win_probability": str(row["WinProbability"]),
             "predicted_possessions": None if pd.isna(row["PredictedPossessions"]) else int(row["PredictedPossessions"]),
             "actual_possessions": None if pd.isna(row["Possessions"]) else int(row["Possessions"]),
-            "ot": is_ot,
+            "ot": ot,
             "OT Count": ot_count,
             "arena_id": arena_id,
             "home_team_id": home_team,
             "is_neutral_site": is_neutral,
-            "location_text": row["Location"],
+            "location_text": city,
         }
         rows_to_insert.append(game_row)
 
