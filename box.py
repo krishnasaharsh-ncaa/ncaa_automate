@@ -171,7 +171,7 @@ class BoxScore:
                 if not team1_id or not team2_id:
                     continue
 
-                jitter = random.uniform(6, 15)
+                jitter = random.uniform(3, 6)
                 time.sleep(jitter)
                 try:
                     parsed_rows, ot_count = self.parse_box_score(box_url)
