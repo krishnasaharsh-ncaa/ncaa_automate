@@ -132,6 +132,7 @@ def insert_fanmatch_to_supabase(date_str, browser):
             "home_team_id": home_team,
             "is_neutral_site": is_neutral,
             "location_text": city,
+            "season": 2026
         }
         rows_to_insert.append(game_row)
 
