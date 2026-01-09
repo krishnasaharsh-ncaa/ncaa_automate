@@ -14,6 +14,7 @@ from datetime import datetime, timedelta, date
 from kenpompy.utils import login
 from supabase.client import create_client, Client
 from tqdm import tqdm
+from scipy.stats import norm
 
 # %%
 # --- 1. SETUP & AUTHENTICATION ---
@@ -78,6 +79,16 @@ def insert_fanmatch_to_supabase(date_str, browser):
         loser_name  = clean_team_name(row["Loser"])
         winner_id = team_lookup.get(winner_name)
         loser_id  = team_lookup.get(loser_name)
+        p_winner_name = clean_team_name(row["PredictedWinner"])
+        p_loser_name  = clean_team_name(row["PredictedLoser"])
+
+        if winner_name == p_winner_name:
+            p_winner_id = winner_id
+            p_loser_id  = loser_id
+        else:
+            p_winner_id = loser_id
+            p_loser_id  = winner_id
+            
 
         # Clean ranks
         if row['Winner'] == row['Team1']:
@@ -86,6 +97,18 @@ def insert_fanmatch_to_supabase(date_str, browser):
         else:
             winner_rank = clean_rank(row["Team2Rank"])
             loser_rank  = clean_rank(row["Team1Rank"])
+
+        #Predicted Score and Spread Calculation
+        pred_score = row["PredictedScore"].split('-')
+        pred_score = [int(i) for i in pred_score]
+
+        win_probability = str(row["WinProbability"]).strip()
+
+        wp = (int(win_probability[:-1]))/ 100
+        if wp <= 0.97: 
+            adjusted_spread = 11.06 * norm.ppf(wp, loc=0, scale=1)
+        else:
+            adjusted_spread = pred_score[0] - pred_score[1]
 
 
         if not winner_id or not loser_id:
@@ -132,6 +155,10 @@ def insert_fanmatch_to_supabase(date_str, browser):
             "home_team_id": home_team,
             "is_neutral_site": is_neutral,
             "location_text": city,
+            "predicted_winner": p_winner_id,
+            "predicted_loser": p_loser_id,
+            "KPS_p_winner": -1 * adjusted_spread,
+            "KPS_p_loser": adjusted_spread,
             "season": 2026
         }
         rows_to_insert.append(game_row)
