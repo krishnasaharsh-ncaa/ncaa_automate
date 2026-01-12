@@ -104,7 +104,7 @@ def insert_fanmatch_to_supabase(date_str, browser):
 
         win_probability = str(row["WinProbability"]).strip()
 
-        wp = (int(win_probability[:-1]))/ 100
+        wp = (float(win_probability[:-1]))/ 100
         if wp <= 0.97: 
             adjusted_spread = 11.06 * norm.ppf(wp, loc=0, scale=1)
         else:

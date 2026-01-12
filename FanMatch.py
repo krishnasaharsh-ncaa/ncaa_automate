@@ -5,7 +5,7 @@ from cloudscraper import CloudScraper
 from bs4 import BeautifulSoup, Tag
 from bs4.element import NavigableString
 from typing import Any, Dict, Optional, List, Union
-from .utils import get_html
+from utils import get_html
 
 
 class FanMatch:
