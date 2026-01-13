@@ -117,6 +117,7 @@ def insert_fanmatch_to_supabase(date_str, browser):
         # Logic for OT and Score
         if row["OT"] == 'nan' or row['OT'] == False:
             ot = False 
+            ot_count = 0
         else:
             ot = True
             ot_count = 1
