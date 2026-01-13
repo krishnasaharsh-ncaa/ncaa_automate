@@ -159,14 +159,13 @@ def insert_fanmatch_to_supabase(date_str, browser):
             row['PredictedScore'] = None
 
         # Location parsing
-        location_text = row["Location"]
-        city, state, arena_name = parse_location(location_text)
+        arena_name = row["Arena"]
+        city = row['City']
+        arena_data = lookup_arena_id(supabase, arena_name)
 
         # Arena ID lookup
         home_team = ''
         is_neutral_site = False
-        arena_name = parse_arena_name(location_text)
-        arena_data = lookup_arena_id(supabase, arena_name)
         if arena_data:
             arena_id = arena_data[0][0]
             home_team_id = arena_data[0][1]
@@ -196,7 +195,7 @@ def insert_fanmatch_to_supabase(date_str, browser):
             "predicted_score": predicted_score,
             "predicted_possessions": predicted_possessions,
 
-            "location": location_text,
+            "location": city,
             "home_team_id": home_team,
 
         }
