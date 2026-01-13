@@ -9,7 +9,7 @@ import os
 import re
 import time
 import pandas as pd
-import kenpomv.FanMatch as kf
+import FanMatch as kf
 from datetime import datetime, timedelta, date
 from kenpompy.utils import login
 from supabase.client import create_client, Client
