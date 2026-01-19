@@ -99,8 +99,11 @@ def insert_fanmatch_to_supabase(date_str, browser):
             loser_rank  = clean_rank(row["Team1Rank"])
 
         #Predicted Score and Spread Calculation
-        pred_score = row["PredictedScore"].split('-')
-        pred_score = [int(i) for i in pred_score]
+        if row['PredictedScore'] is not None:
+            pred_score = row["PredictedScore"].split('-')
+            pred_score = [int(i) for i in pred_score]
+        else:
+            pred_score = [None, None]
 
         win_probability = str(row["WinProbability"]).strip()
 
@@ -108,7 +111,10 @@ def insert_fanmatch_to_supabase(date_str, browser):
         if wp <= 0.97: 
             adjusted_spread = 11.06 * norm.ppf(wp, loc=0, scale=1)
         else:
-            adjusted_spread = pred_score[0] - pred_score[1]
+            if pred_score[0] is not None and pred_score[1] is not None:
+                adjusted_spread = pred_score[0] - pred_score[1]
+            else:
+                adjusted_spread = None
 
 
         if not winner_id or not loser_id:
