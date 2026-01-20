@@ -79,6 +79,8 @@ def insert_fanmatch_to_supabase(date_str, browser):
         loser_name  = clean_team_name(row["Loser"])
         winner_id = team_lookup.get(winner_name)
         loser_id  = team_lookup.get(loser_name)
+        if not winner_id or not loser_id:
+            continue
         p_winner_name = clean_team_name(row["PredictedWinner"])
         p_loser_name  = clean_team_name(row["PredictedLoser"])
 
