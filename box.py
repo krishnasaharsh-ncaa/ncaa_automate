@@ -103,7 +103,7 @@ class BoxScore:
     def get_links(self, date_str):
         url = f"https://kenpom.com/fanmatch.php?d={date_str}"
         soup = BeautifulSoup(get_html(self.browser, url), "html.parser")
-
+        time.sleep(2)
         table = soup.select_one("#fanmatch-table")
         if not table:
             return {}
@@ -171,7 +171,7 @@ class BoxScore:
                 if not team1_id or not team2_id:
                     continue
 
-                jitter = random.uniform(3, 6)
+                jitter = random.uniform(5, 7)
                 time.sleep(jitter)
                 try:
                     parsed_rows, ot_count = self.parse_box_score(box_url)
