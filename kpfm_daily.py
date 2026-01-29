@@ -219,6 +219,6 @@ def insert_fanmatch_to_supabase(date_str, browser):
 
 #%%
 if __name__ == "__main__":
-    # Yesterday's data
-    target_date = (date.today()).strftime("%Y-%m-%d")
-    insert_fanmatch_to_supabase(target_date, browser)
+    for offset in range(4):
+        target_date = (date.today() + timedelta(days=offset)).strftime("%Y-%m-%d")
+        insert_fanmatch_to_supabase(target_date, browser)
