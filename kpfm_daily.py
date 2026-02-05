@@ -116,6 +116,7 @@ def parse_arena_name(location_text):
 #%%
 #Main Function
 def insert_fanmatch_to_supabase(date_str, browser):
+    time.sleep(2)  # To avoid rate limiting
     team_lookup = build_team_lookup(supabase)
 
     #This commented line is only for leap year date
@@ -221,4 +222,5 @@ def insert_fanmatch_to_supabase(date_str, browser):
 if __name__ == "__main__":
     for offset in range(4):
         target_date = (date.today() + timedelta(days=offset)).strftime("%Y-%m-%d")
+        print(f"\nProcessing date: {target_date}")
         insert_fanmatch_to_supabase(target_date, browser)
