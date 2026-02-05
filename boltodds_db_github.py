@@ -9,7 +9,7 @@ import pandas as pd
 from dateutil import parser as dtparser
 import websockets
 from dotenv import load_dotenv
-from github_files.trial_to_db_github import upload_from_dfs
+from trial_to_db_github import upload_from_dfs
 
 
 # ----------------------------
