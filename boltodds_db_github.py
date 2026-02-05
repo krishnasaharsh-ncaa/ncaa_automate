@@ -246,11 +246,17 @@ async def collect_and_process_odds(wait_seconds=20, dmm_file="DMM.xlsx"):
     client.df['status'] = client.df['odds'].apply(lambda x: 'SUSPENDED' if (pd.isna(x) or x == '') else 'ACTIVE')
     try:
         dmm = pd.read_excel(dmm_file)
-        alias_map = dict(zip(dmm[dmm['Source'] == 'BO_26']['Alias'], dmm[dmm['Source'] == 'BO_26']['team_id']))
-        client.df['team_id'] = client.df['outcome_target'].map(alias_map)
-        client.df['home_team_id'] = client.df['home_team'].map(alias_map)
-        client.df['away_team_id'] = client.df['away_team'].map(alias_map)
+        if {"Source", "Alias", "team_id"}.issubset(dmm.columns):
+            dmm = dmm[dmm["Source"] == "BO_26"].copy()
+            alias_map = dict(zip(dmm["Alias"], dmm["team_id"]))
+        else:
+            alias_map = {}
+        print(f"DMM loaded: {len(alias_map)} mappings")
+        client.df["team_id"] = client.df["outcome_target"].map(alias_map)
+        client.df["home_team_id"] = client.df["home_team"].map(alias_map)
+        client.df["away_team_id"] = client.df["away_team"].map(alias_map)
     except Exception:
+        print("DMM loaded: 0 mappings")
         alias_map = {}
     client.current_spreads = find_current_spreads(client.df)
     client.current_totals = find_current_totals(client.df)

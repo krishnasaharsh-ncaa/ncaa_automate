@@ -43,16 +43,21 @@ def prepare_spreads(spreads: pd.DataFrame, lookup: dict):
     missed = 0
     for _, row in spreads.iterrows():
         game_date = pd.to_datetime(row["date"]).strftime("%Y-%m-%d")
-        if row['team1_id'].startswith('D') or row['team2_id'].startswith('D'):
+        t1_id = row.get("team1_id")
+        t2_id = row.get("team2_id")
+        if pd.isna(t1_id) or pd.isna(t2_id):
+            missed += 1
+            continue
+        if str(t1_id).startswith('D') or str(t2_id).startswith('D'):
             continue
         # match to schedule orientation
-        key_1 = (game_date, row["team1_id"], row["team2_id"])
-        key_2 = (game_date, row["team2_id"], row["team1_id"])
+        key_1 = (game_date, t1_id, t2_id)
+        key_2 = (game_date, t2_id, t1_id)
 
         if key_1 in lookup:
             matched += 1
-            t1 = row["team1_id"]
-            t2 = row["team2_id"]
+            t1 = t1_id
+            t2 = t2_id
 
             # create TWO side rows
             upsert_payload_spreads.append({
@@ -84,8 +89,8 @@ def prepare_spreads(spreads: pd.DataFrame, lookup: dict):
         elif key_2 in lookup:
             # swap orientation to match schedule
             matched += 1
-            t1 = row["team2_id"]
-            t2 = row["team1_id"]
+            t1 = t2_id
+            t2 = t1_id
 
             # when you swap team order, swap spreads/odds too
             upsert_payload_spreads.append({
@@ -125,15 +130,20 @@ def prepare_totals(totals: pd.DataFrame, lookup: dict):
     missed = 0
     for _, row in totals.iterrows():
         game_date = pd.to_datetime(row["date"]).strftime("%Y-%m-%d")
-        if row['home_team_id'].startswith('D') or row['away_team_id'].startswith('D'):
+        home_id = row.get("home_team_id")
+        away_id = row.get("away_team_id")
+        if pd.isna(home_id) or pd.isna(away_id):
+            missed += 1
             continue
-        key_1 = (game_date, row["home_team_id"], row["away_team_id"])
-        key_2 = (game_date, row["away_team_id"], row["home_team_id"])
+        if str(home_id).startswith('D') or str(away_id).startswith('D'):
+            continue
+        key_1 = (game_date, home_id, away_id)
+        key_2 = (game_date, away_id, home_id)
 
         if key_1 in lookup:
             matched += 1
-            t1 = row["home_team_id"]
-            t2 = row["away_team_id"]
+            t1 = home_id
+            t2 = away_id
 
             total_line = float(row["total"]) if pd.notna(row["total"]) else None
 
@@ -167,8 +177,8 @@ def prepare_totals(totals: pd.DataFrame, lookup: dict):
         elif key_2 in lookup:
             # swap to match schedule orientation
             matched += 1
-            t1 = row["away_team_id"]
-            t2 = row["home_team_id"]
+            t1 = away_id
+            t2 = home_id
 
             total_line = float(row["total"]) if pd.notna(row["total"]) else None
 
