@@ -196,8 +196,6 @@ def find_current_spreads(df):
     spreads['odds'] = pd.to_numeric(spreads['odds'], errors='coerce')
     spreads['outcome_line'] = pd.to_numeric(spreads['outcome_line'], errors='coerce')
     spreads = spreads.dropna(subset=['odds', 'outcome_line', 'outcome_target'])
-    spreads = spreads.dropna(subset=['team_id'])
-    spreads = spreads[spreads['team_id'].astype(str).str.strip() != ""]
     spreads['abs_spread'] = spreads['outcome_line'].abs()
     
     results = []
@@ -224,11 +222,6 @@ def find_current_totals(df):
     totals['odds'] = pd.to_numeric(totals['odds'], errors='coerce')
     totals['outcome_line'] = pd.to_numeric(totals['outcome_line'], errors='coerce')
     totals = totals.dropna(subset=['odds', 'outcome_line', 'outcome_over_under'])
-    totals = totals.dropna(subset=['home_team_id', 'away_team_id'])
-    totals = totals[
-        (totals['home_team_id'].astype(str).str.strip() != "") &
-        (totals['away_team_id'].astype(str).str.strip() != "")
-    ]
     
     results = []
     for (game, sportsbook), group in totals.groupby(['game', 'sportsbook']):
@@ -256,16 +249,16 @@ async def collect_and_process_odds(wait_seconds=20):
         resp = (
             supabase.table("team_aliases")
             .select("canonical_team_id, alias_name, source")
-            .eq("source", "KAL")
+            .eq("source", "BO")
             .execute()
         )
         if resp.data:
             alias_map = {row["alias_name"]: row["canonical_team_id"] for row in resp.data}
         else:
             alias_map = {}
-        client.df['team_id'] = client.df['outcome_target'].map(alias_map)
-        client.df['home_team_id'] = client.df['home_team'].map(alias_map)
-        client.df['away_team_id'] = client.df['away_team'].map(alias_map)
+        client.df["team_id"] = client.df["outcome_target"].map(alias_map)
+        client.df["home_team_id"] = client.df["home_team"].map(alias_map)
+        client.df["away_team_id"] = client.df["away_team"].map(alias_map)
     except Exception:
         alias_map = {}
     client.current_spreads = find_current_spreads(client.df)
@@ -284,6 +277,7 @@ async def main():
         game_date,
         upload=True,
     )
+
     print(f"Found {found_matches} matches and missed {missed_matches} matches")
     print(f"Uploaded {uploaded_matches} matches to supabase")
     return client
