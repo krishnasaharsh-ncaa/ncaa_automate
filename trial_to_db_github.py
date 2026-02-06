@@ -45,8 +45,12 @@ def prepare_spreads(spreads: pd.DataFrame, lookup: dict):
         game_date = pd.to_datetime(row["date"]).strftime("%Y-%m-%d")
         t1_id = row.get("team1_id")
         t2_id = row.get("team2_id")
-        if pd.isna(t1_id) or pd.isna(t2_id):
-            missed += 1
+        if (
+            pd.isna(t1_id)
+            or pd.isna(t2_id)
+            or str(t1_id).strip() == ""
+            or str(t2_id).strip() == ""
+        ):
             continue
         if str(t1_id).startswith('D') or str(t2_id).startswith('D'):
             continue
@@ -132,8 +136,12 @@ def prepare_totals(totals: pd.DataFrame, lookup: dict):
         game_date = pd.to_datetime(row["date"]).strftime("%Y-%m-%d")
         home_id = row.get("home_team_id")
         away_id = row.get("away_team_id")
-        if pd.isna(home_id) or pd.isna(away_id):
-            missed += 1
+        if (
+            pd.isna(home_id)
+            or pd.isna(away_id)
+            or str(home_id).strip() == ""
+            or str(away_id).strip() == ""
+        ):
             continue
         if str(home_id).startswith('D') or str(away_id).startswith('D'):
             continue
@@ -217,7 +225,7 @@ def prepare_totals(totals: pd.DataFrame, lookup: dict):
 #Function to upload to Supabase
 def upsert_to_supabase(supabase: Client, payload):
     if not payload:
-        return
+        return 0
 
     try:
         supabase.table("game_market_lines") \
@@ -226,6 +234,7 @@ def upsert_to_supabase(supabase: Client, payload):
                 on_conflict="game_date,team1_id,team2_id,sportsbook,market,side_type,line_state"
             ) \
             .execute()
+        return len(payload)
     except Exception as e:
         raise
     
@@ -238,8 +247,10 @@ def build_payloads(spreads: pd.DataFrame, totals: pd.DataFrame, lookup: dict):
 
 
 def upload_payloads(supabase: Client, spreads_payload, totals_payload):
-    upsert_to_supabase(supabase, spreads_payload)
-    upsert_to_supabase(supabase, totals_payload)
+    uploaded = 0
+    uploaded += upsert_to_supabase(supabase, spreads_payload)
+    uploaded += upsert_to_supabase(supabase, totals_payload)
+    return uploaded
 
 
 def upload_from_dfs(
@@ -257,9 +268,7 @@ def upload_from_dfs(
 
     uploaded = 0
     if upload:
-        upload_payloads(supabase, spreads_payload, totals_payload)
-        uploaded = matched
-
+        uploaded = upload_payloads(supabase, spreads_payload, totals_payload)
     return spreads_payload, totals_payload, matched, missed, uploaded
 
 #%%

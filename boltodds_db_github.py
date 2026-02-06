@@ -9,7 +9,7 @@ import pandas as pd
 from dateutil import parser as dtparser
 import websockets
 from dotenv import load_dotenv
-from trial_to_db_github import upload_from_dfs
+from trial_to_db_github import upload_from_dfs, get_supabase_client
 
 
 # ----------------------------
@@ -196,6 +196,8 @@ def find_current_spreads(df):
     spreads['odds'] = pd.to_numeric(spreads['odds'], errors='coerce')
     spreads['outcome_line'] = pd.to_numeric(spreads['outcome_line'], errors='coerce')
     spreads = spreads.dropna(subset=['odds', 'outcome_line', 'outcome_target'])
+    spreads = spreads.dropna(subset=['team_id'])
+    spreads = spreads[spreads['team_id'].astype(str).str.strip() != ""]
     spreads['abs_spread'] = spreads['outcome_line'].abs()
     
     results = []
@@ -222,6 +224,11 @@ def find_current_totals(df):
     totals['odds'] = pd.to_numeric(totals['odds'], errors='coerce')
     totals['outcome_line'] = pd.to_numeric(totals['outcome_line'], errors='coerce')
     totals = totals.dropna(subset=['odds', 'outcome_line', 'outcome_over_under'])
+    totals = totals.dropna(subset=['home_team_id', 'away_team_id'])
+    totals = totals[
+        (totals['home_team_id'].astype(str).str.strip() != "") &
+        (totals['away_team_id'].astype(str).str.strip() != "")
+    ]
     
     results = []
     for (game, sportsbook), group in totals.groupby(['game', 'sportsbook']):
@@ -240,23 +247,26 @@ def find_current_totals(df):
     res_df = pd.DataFrame(results)
     return res_df.sort_values('abs_sum').groupby(['game', 'sportsbook']).head(1).reset_index(drop=True) if not res_df.empty else res_df
 
-async def collect_and_process_odds(wait_seconds=20, dmm_file="DMM.xlsx"):
+async def collect_and_process_odds(wait_seconds=20):
     client = BoltOddsWSClient()
     await client.run_snapshot(wait_seconds=wait_seconds)
     client.df['status'] = client.df['odds'].apply(lambda x: 'SUSPENDED' if (pd.isna(x) or x == '') else 'ACTIVE')
     try:
-        dmm = pd.read_excel(dmm_file)
-        if {"Source", "Alias", "team_id"}.issubset(dmm.columns):
-            dmm = dmm[dmm["Source"] == "BO_26"].copy()
-            alias_map = dict(zip(dmm["Alias"], dmm["team_id"]))
+        supabase = get_supabase_client()
+        resp = (
+            supabase.table("team_aliases")
+            .select("canonical_team_id, alias_name, source")
+            .eq("source", "KAL")
+            .execute()
+        )
+        if resp.data:
+            alias_map = {row["alias_name"]: row["canonical_team_id"] for row in resp.data}
         else:
             alias_map = {}
-        print(f"DMM loaded: {len(alias_map)} mappings")
-        client.df["team_id"] = client.df["outcome_target"].map(alias_map)
-        client.df["home_team_id"] = client.df["home_team"].map(alias_map)
-        client.df["away_team_id"] = client.df["away_team"].map(alias_map)
+        client.df['team_id'] = client.df['outcome_target'].map(alias_map)
+        client.df['home_team_id'] = client.df['home_team'].map(alias_map)
+        client.df['away_team_id'] = client.df['away_team'].map(alias_map)
     except Exception:
-        print("DMM loaded: 0 mappings")
         alias_map = {}
     client.current_spreads = find_current_spreads(client.df)
     client.current_totals = find_current_totals(client.df)
@@ -274,7 +284,6 @@ async def main():
         game_date,
         upload=True,
     )
-
     print(f"Found {found_matches} matches and missed {missed_matches} matches")
     print(f"Uploaded {uploaded_matches} matches to supabase")
     return client
